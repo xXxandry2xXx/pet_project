@@ -1,0 +1,52 @@
+version: '3.4'
+
+services:
+  mssql:
+    container_name: mssql
+    image: mcr.microsoft.com/mssql/server:latest
+    user: root
+    volumes:
+      - mssql_data:/var/opt/mssql
+    environment:
+      SA_PASSWORD: qw12er34AA1!
+      ACCEPT_EULA: Y
+      TZ: UTC
+      # MSSQL_PID: Express
+    ports:
+      - '1433:1433'
+  
+
+  artur_gde_krosi_vue.server:
+    container_name: artur_gde_krosi_vue.server
+    # image: andreybp/server:les
+    build:
+      context: artur_gde_krosi_Vue.Server/
+    depends_on:
+      - mssql
+
+  my-app:
+    # image: andreybp/my-app:les
+    container_name: my-app
+    build: artur_gde_krosi_vue.client/
+    ports:
+      - 443:443
+      - 80:80
+    depends_on:
+      - artur_gde_krosi_vue.server     
+    restart: always
+    volumes:
+      - ./certbot/www:/var/www/certbot/:ro
+      - ./certbot/conf/:/etc/nginx/ssl/:ro
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./certbot/www/:/var/www/certbot/:rw
+      - ./certbot/conf/:/etc/letsencrypt/:rw
+ 
+
+networks:
+  app-net:
+
+volumes:
+  mssql_data:
